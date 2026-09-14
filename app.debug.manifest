@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="TTMon.app"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!--
+          DEBUG: asInvoker (bez administratora) - zeby F5/Debug Run w VS Code
+          dzialal normalnie. CreateProcess (ktorego uzywa debugger) NIE honoruje
+          requireAdministrator w manifescie - to dziala tylko przez ShellExecute
+          (dwuklik w Eksploratorze, cmd.exe) - bez tego F5 konczylby sie cichym
+          bledem ERROR_ELEVATION_REQUIRED zamiast uruchomienia appki.
+          Sensory CPU/GPU beda w tym trybie pokazywac n/a (LibreHardwareMonitorLib
+          potrzebuje admina) - to oczekiwane przy iteracyjnej pracy nad UI.
+          Release uzywa app.release.manifest z prawdziwym requireAdministrator.
+        -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" /> <!-- Windows 10/11 -->
+    </application>
+  </compatibility>
+
+  <!--
+    DPI awareness NIE jest tu juz deklarowana recznie - obsluguje to teraz
+    ApplicationHighDpiMode w .csproj + ApplicationConfiguration.Initialize()
+    w Program.cs (patrz app.release.manifest, ten sam powod).
+  -->
+</assembly>

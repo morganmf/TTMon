@@ -1,0 +1,22 @@
+# Wyniki builda .NET - generowane, nie powinny byc w repo
+bin/
+obj/
+
+# Visual Studio / VS Code
+.vs/
+*.user
+*.suo
+
+# Wynik kompilacji instalatora (Inno Setup) - generowany, nie w repo
+installer/Output/
+
+# BEZPIECZENSTWO: certyfikaty i klucze prywatne - nigdy w repo, nawet gdyby
+# ktos przypadkiem skopiowal je do folderu projektu
+*.pfx
+*.pem
+*.key
+*.p12
+
+# Lokalne ustawienia dewelopera (jesli kiedys skopiujesz tu settings.json
+# do testow) - to i tak normalnie zyje w %APPDATA%, nie w repo
+settings.local.json

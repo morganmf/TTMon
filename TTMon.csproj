@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>TTMon</AssemblyName>
+    <RootNamespace>TTMon</RootNamespace>
+    <Version>0.11.0-beta</Version>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <!-- Nowoczesny sposob (.NET 6+) - zamiast recznego XML w manifescie,
+         ktory kolidowal z tym mechanizmem (ostrzezenie WFAC010) -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <!--
+    Debug: asInvoker (bez administratora) - zeby F5/Debug Run w VS Code dzialal
+    normalnie (debugger startuje proces przez CreateProcess, ktore NIE honoruje
+    requireAdministrator - to dziala tylko przez ShellExecute). Sensory pokaza
+    n/a w tym trybie, co jest akceptowalne przy iteracyjnej pracy nad UI.
+    Release: prawdziwy requireAdministrator, tak jak dostaje user koncowy.
+  -->
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <ApplicationManifest>app.debug.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'!='Debug'">
+    <ApplicationManifest>app.release.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Wymaga dostępu do nuget.org przy pierwszym `dotnet restore` -->
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Osadzone w binarce .exe (nie kopiowane obok jako osobny plik) -
+         wszystko w jednym pliku, nic do zgubienia przy przenoszeniu .exe -->
+    <EmbeddedResource Include="Resources\splash.jpg" />
+    <!-- Warunkowe: jesli pliku jeszcze nie ma, wpis jest po prostu pomijany
+         (bez bledu builda) - patrz EmbeddedFontLoader.cs -->
+    <EmbeddedResource Include="Resources\Dosis.ttf" Condition="Exists('Resources\Dosis.ttf')" />
+    <EmbeddedResource Include="Resources\JetBrainsMono-Bold.ttf" Condition="Exists('Resources\JetBrainsMono-Bold.ttf')" />
+  </ItemGroup>
+
+</Project>
