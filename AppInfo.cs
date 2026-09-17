@@ -6,7 +6,7 @@ public static class AppInfo
     public const string Tagline = "CPU/GPU/WAN Delay Tray Monitor";
     public const string Author = "Blaoyne";
 
-    public const string Version = "0.12-beta";
+    public const string Version = "0.13-beta";
 
     // Uwaga: to jest data ostatniej modyfikacji pliku .exe na dysku, nie
     // "prawdziwa" data kompilacji osadzona przez kompilator (.NET domyslnie

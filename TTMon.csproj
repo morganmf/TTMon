@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>TTMon</AssemblyName>
     <RootNamespace>TTMon</RootNamespace>
-    <Version>0.12.0-beta</Version>
+    <Version>0.13.0-beta</Version>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <!-- Nowoczesny sposob (.NET 6+) - zamiast recznego XML w manifescie,
          ktory kolidowal z tym mechanizmem (ostrzezenie WFAC010) -->
