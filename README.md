@@ -36,16 +36,30 @@ administrator, wtedy F5 tez dziala z podniesionymi uprawnieniami od razu.
   Resources/JetBrainsMono-Bold.ttf)
 - Ustawialne zakresy gradientu osobno dla temperatury (C) i dla WAN (ms)
 - Ekran powitalny (splash) przy starcie - fade in/hold/fade out (4s), mozna wylaczyc w ustawieniach
-- Klik lewym na ikonie: wykresy (DetailsForm). Podwojny klik: ustawienia. Prawy klik: menu.
+- Klik lewym na ikonie: wykresy (DetailsForm). Prawy klik: menu (Info/Sensory/Ustawienia/Zakoncz).
 - Autostart z Windows (ustawienia -> Ogolne) - przez Harmonogram Zadan, nie zwykly
   rejestr Run (patrz uwaga nizej)
-- Logowanie odczytow do pliku .txt (ustawienia -> Ogolne, domyslnie WYLACZONE) -
-  format CSV ze srednikiem jako separator (latwy import do Excela), plik w
-  %APPDATA%\TTMon\readings.txt. UWAGA: plik rosnie bez ograniczen, nie ma
-  rotacji/limitu rozmiaru - do dorobienia jesli okaze sie potrzebne
-- Prawy klik: Ustawienia / Info (branding + wersja + wykryty CPU/GPU/RAM + probna
-  lista sensorow plyty glownej) / Zakoncz
-- Podwojny klik na ikonie: male okienko z CPU/GPU/WAN, kolorowa kropka przed kazda wartoscia
+- Logowanie odczytow do pliku .csv (ustawienia -> Ogolne, domyslnie WYLACZONE) -
+  srednik jako separator, plik w %APPDATA%\TTMon\readings.csv - Excel otwiera go
+  natywnie jako tabele przy dwukliku, wykresy robi sie identycznie jak z .xlsx.
+  Swiadomie NIE .xlsx - patrz komentarz w ReadingsLogger.cs (ten format trzeba
+  by wczytywac+zapisywac caly przy kazdym dopisywanym wierszu, co przy
+  dlugotrwalym logowaniu zaczeloby zauwazalnie spowalniac appke). UWAGA: plik
+  rosnie bez ograniczen, nie ma rotacji/limitu rozmiaru - do dorobienia jesli
+  okaze sie potrzebne
+- Kontur wokol cyfr w ikonie (ustawienia -> Czujniki, domyslnie WLACZONY) -
+  pomaga na paskach zadan z przezroczystoscia, gdzie same nasycone kolory
+  gradientu czasem gina w tle
+- Tryb ciemny (ustawienia -> Ogolne) - koloruje Ustawienia/Info/Sensory/wykresy
+  na ciemno, wlacznie z ciemnym paskiem tytulowym (DWM, Windows 10 1809+/11) -
+  patrz ThemeHelper.cs
+- "Sensory" w menu - osobne okno z lista WSZYSTKICH czujnikow plyty glownej
+  (temperatury/wentylatory/napiecia) + wykres wybranego wiersza na dole,
+  wzorowane na zakladce Sensors w GPU-Z (klik wiersz -> wykres pod spodem
+  pokazuje TEGO czujnika historie). Kazdy typ ma inna skale, wiec wykres uzywa
+  auto-zakresu (SparklineChart.AutoRange), nie sztywnego jak przy CPU/GPU/WAN
+- Prawy klik: Info (branding + wersja + wykryty CPU/GPU/RAM) / Sensory / Ustawienia / Zakoncz
+- Klik lewym na ikonie otwiera male okienko: CPU/GPU/WAN, kolorowa kropka przed kazda wartoscia
 - Tooltip na wykresach w tym okienku - najedz mysza, pokaze wartosc i ile sekund
   temu (np. "72.3C - -42s")
 - Opcja "zawsze na wierzchu" dla okienka z wykresami (ustawienia -> Ogolne)
@@ -64,6 +78,12 @@ appka juz dziala jako administrator), startuje podniesione bez ponownego pytania
 AutostartManager.cs woła `schtasks.exe` - jesli z jakiegos powodu nie zadziala
 (brak uprawnien, zablokowane przez polityke grupowa), ustawienia pokaza komunikat
 zamiast cichej porazki.
+
+Samo-naprawa sciezki: przy KAZDYM starcie appki, jesli autostart jest wlaczony,
+zadanie jest cicho odswiezane na biezaca sciezke .exe (TrayApplicationContext.cs).
+Bez tego przeniesienie/przeinstalowanie programu w innym miejscu zostawialoby
+zadanie wskazujace na martwy, stary plik - wygladajace na wlaczone w ustawieniach
+(bo zadanie istnieje), ale realnie nic nie uruchamiajace przy logowaniu.
 
 ## Instalator (Inno Setup)
 W folderze `installer/TTMon.iss` jest gotowy skrypt dla Inno Setup (darmowy,

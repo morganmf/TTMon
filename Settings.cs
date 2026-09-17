@@ -45,6 +45,8 @@ public class AppSettings
     public bool DetailsAlwaysOnTop { get; set; } = false;
     public int? DetailsWindowX { get; set; }
     public int? DetailsWindowY { get; set; }
+    public bool IconOutline { get; set; } = true;
+    public bool DarkMode { get; set; } = false;
 
     // Adres pingowany do pomiaru opoznienia WAN (musi odpowiadac na ICMP)
     public string WanPingHost { get; set; } = "1.1.1.1";

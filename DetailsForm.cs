@@ -111,6 +111,8 @@ public sealed class DetailsForm : Form
         RefreshValues(); // pierwsze wypelnienie od razu, bez czekania na pierwszy tick
         _refreshTimer.Tick += (_, _) => RefreshValues();
         _refreshTimer.Start();
+
+        Load += (_, _) => ThemeHelper.Apply(this, _settings.DarkMode);
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)

@@ -2,7 +2,7 @@ namespace TTMon;
 
 public sealed class InfoForm : Form
 {
-    public InfoForm(string? cpuName, string? gpuName, double? ramGb, IReadOnlyList<(string Name, float? Value, string Unit)> motherboardSensors)
+    public InfoForm(string? cpuName, string? gpuName, double? ramGb, AppSettings settings)
     {
         Text = Localization.T("info_title");
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -70,42 +70,15 @@ public sealed class InfoForm : Form
         y += 6;
         AddInfoLine($"{Localization.T("info_build_date")}: {AppInfo.BuildDate:yyyy-MM-dd HH:mm}", ref y, contentWidth);
 
-        // Sekcja diagnostyczna "na probe" - wszystkie sensory plyty glownej,
-        // zeby zobaczyc co faktycznie zglasza dany model przed zdecydowaniem
-        // co pokazywac na stale gdzie indziej w appce.
-        y += 10;
-        Controls.Add(new Label
-        {
-            Text = Localization.T("info_motherboard_title"),
-            Left = 15, Top = y, Width = contentWidth,
-            Font = new Font("Segoe UI", 9f, FontStyle.Bold),
-        });
-        y += 20;
-
-        var sensorText = motherboardSensors.Count > 0
-            ? string.Join(Environment.NewLine, motherboardSensors.Select(s =>
-                $"{s.Name}: {(s.Value is float v ? v.ToString("0.0") : "n/a")} {s.Unit}"))
-            : Localization.T("info_motherboard_none");
-
-        var sensorBox = new TextBox
-        {
-            Left = 15, Top = y, Width = contentWidth, Height = 150,
-            Multiline = true,
-            ReadOnly = true,
-            ScrollBars = ScrollBars.Vertical,
-            Font = new Font("Consolas", 8f),
-            Text = sensorText,
-        };
-        Controls.Add(sensorBox);
-        y += 150 + 10;
-
-        y += 5;
+        y += 15;
         var okBtn = new Button { Text = Localization.T("ok"), Left = (contentWidth - 80) / 2 + 15, Top = y, Width = 80, DialogResult = DialogResult.OK };
         Controls.Add(okBtn);
         AcceptButton = okBtn;
         CancelButton = okBtn;
 
         ClientSize = new Size(contentWidth + 30, y + 50);
+
+        Load += (_, _) => ThemeHelper.Apply(this, settings.DarkMode);
     }
 
     private void AddInfoLine(string text, ref int y, int contentWidth)

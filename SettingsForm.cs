@@ -11,6 +11,7 @@ public sealed class SettingsForm : Form
     private readonly CheckBox _showSplashBox = new();
     private readonly CheckBox _enableLoggingBox = new();
     private readonly CheckBox _alwaysOnTopBox = new();
+    private readonly CheckBox _darkModeBox = new();
 
     private readonly CheckBox _showCpuBox = new();
     private readonly CheckBox _showGpuBox = new();
@@ -20,6 +21,7 @@ public sealed class SettingsForm : Form
     private readonly ComboBox _gpuVendorBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _iconSizeBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _trayFontBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
+    private readonly CheckBox _iconOutlineBox = new();
 
     private readonly NumericUpDown _tempMinUpDown = new() { Minimum = -50, Maximum = 150, DecimalPlaces = 0 };
     private readonly NumericUpDown _tempMaxUpDown = new() { Minimum = -50, Maximum = 150, DecimalPlaces = 0 };
@@ -27,9 +29,16 @@ public sealed class SettingsForm : Form
     private readonly NumericUpDown _wanMinUpDown = new() { Minimum = 0, Maximum = 5000, Increment = 10 };
     private readonly NumericUpDown _wanMaxUpDown = new() { Minimum = 0, Maximum = 5000, Increment = 10 };
 
+    private readonly Button _saveBtn = new();
+
     // Stan autostartu przy otwarciu dialogu - porownywany przy zapisie, zeby
     // wolac AutostartManager tylko gdy user faktycznie cos zmienil
     private bool _autostartWasEnabled;
+
+    // Dopoki trwa poczatkowe ladowanie wartosci (LoadFromSettings), zmiany
+    // kontrolek NIE licza sie jako "user cos zmienil" - inaczej przycisk
+    // Zapisz odblokowalby sie sam, zaraz po otwarciu okna.
+    private bool _isLoading;
 
     public SettingsForm(AppSettings settings)
     {
@@ -43,7 +52,12 @@ public sealed class SettingsForm : Form
         AutoScaleMode = AutoScaleMode.None;
 
         BuildLayout();
+
+        _isLoading = true;
         LoadFromSettings();
+        _isLoading = false;
+
+        Load += (_, _) => ThemeHelper.Apply(this, _settings.DarkMode);
     }
 
     private void BuildLayout()
@@ -56,20 +70,52 @@ public sealed class SettingsForm : Form
         y = AddTempGradientGroup(formWidth, y);
         y = AddWanGradientGroup(formWidth, y);
 
-        var okBtn = new Button { Text = Localization.T("ok"), Left = formWidth - 190, Top = y, Width = 80, DialogResult = DialogResult.OK };
+        // Podpinamy sledzenie zmian PO zbudowaniu wszystkich grup (zeby
+        // zlapac kazda kontrolke), ale PRZED LoadFromSettings (ktore i tak
+        // jest oslonione flaga _isLoading w konstruktorze).
+        HookDirtyTracking(Controls);
+
+        _saveBtn.Text = Localization.T("save");
+        _saveBtn.Left = formWidth - 190; _saveBtn.Top = y; _saveBtn.Width = 80;
+        _saveBtn.DialogResult = DialogResult.OK;
+        _saveBtn.Enabled = false; // odblokowuje sie dopiero po pierwszej realnej zmianie
+        _saveBtn.Click += (_, _) => SaveToSettings();
+
         var cancelBtn = new Button { Text = Localization.T("cancel"), Left = formWidth - 100, Top = y, Width = 80, DialogResult = DialogResult.Cancel };
-        okBtn.Click += (_, _) => SaveToSettings();
-        Controls.Add(okBtn);
+
+        Controls.Add(_saveBtn);
         Controls.Add(cancelBtn);
-        AcceptButton = okBtn;
+        AcceptButton = _saveBtn;
         CancelButton = cancelBtn;
 
         ClientSize = new Size(formWidth, y + 50);
     }
 
+    // Rekurencyjnie podpina wspolny handler MarkDirty pod kazda kontrolke
+    // ustawien (checkbox/combo/numeric) - zeby nie trzeba bylo pamietac o
+    // podpieciu recznie przy kazdej nowej opcji dodanej w przyszlosci.
+    private void HookDirtyTracking(Control.ControlCollection controls)
+    {
+        foreach (Control c in controls)
+        {
+            switch (c)
+            {
+                case CheckBox chk: chk.CheckedChanged += MarkDirty; break;
+                case ComboBox cmb: cmb.SelectedIndexChanged += MarkDirty; break;
+                case NumericUpDown num: num.ValueChanged += MarkDirty; break;
+            }
+            if (c.HasChildren) HookDirtyTracking(c.Controls);
+        }
+    }
+
+    private void MarkDirty(object? sender, EventArgs e)
+    {
+        if (!_isLoading) _saveBtn.Enabled = true;
+    }
+
     private int AddGeneralGroup(int formWidth, int top)
     {
-        var group = new GroupBox { Text = Localization.T("section_general"), Left = 15, Top = top, Width = formWidth - 30, Height = 176 };
+        var group = new GroupBox { Text = Localization.T("section_general"), Left = 15, Top = top, Width = formWidth - 30, Height = 204 };
         int gy = 25;
 
         var langLabel = new Label { Text = Localization.T("language"), Left = 15, Top = gy, Width = 100 };
@@ -97,6 +143,11 @@ public sealed class SettingsForm : Form
         _alwaysOnTopBox.Text = Localization.T("details_always_on_top");
         _alwaysOnTopBox.Left = 15; _alwaysOnTopBox.Top = gy; _alwaysOnTopBox.Width = 300;
         group.Controls.Add(_alwaysOnTopBox);
+        gy += 28;
+
+        _darkModeBox.Text = Localization.T("dark_mode");
+        _darkModeBox.Left = 15; _darkModeBox.Top = gy; _darkModeBox.Width = 300;
+        group.Controls.Add(_darkModeBox);
 
         Controls.Add(group);
         return top + group.Height + 10;
@@ -104,7 +155,7 @@ public sealed class SettingsForm : Form
 
     private int AddSensorsGroup(int formWidth, int top)
     {
-        var group = new GroupBox { Text = Localization.T("section_sensors"), Left = 15, Top = top, Width = formWidth - 30, Height = 297 };
+        var group = new GroupBox { Text = Localization.T("section_sensors"), Left = 15, Top = top, Width = formWidth - 30, Height = 325 };
         int gy = 22;
 
         _showCpuBox.Text = Localization.T("show_cpu");
@@ -167,6 +218,11 @@ public sealed class SettingsForm : Form
         _trayFontBox.Left = 150; _trayFontBox.Top = gy; _trayFontBox.Width = 160;
         group.Controls.Add(trayFontLabel);
         group.Controls.Add(_trayFontBox);
+        gy += 32;
+
+        _iconOutlineBox.Text = Localization.T("icon_outline");
+        _iconOutlineBox.Left = 15; _iconOutlineBox.Top = gy; _iconOutlineBox.Width = 300;
+        group.Controls.Add(_iconOutlineBox);
 
         Controls.Add(group);
         return top + group.Height + 10;
@@ -219,6 +275,7 @@ public sealed class SettingsForm : Form
         _showSplashBox.Checked = _settings.ShowSplash;
         _enableLoggingBox.Checked = _settings.EnableLogging;
         _alwaysOnTopBox.Checked = _settings.DetailsAlwaysOnTop;
+        _darkModeBox.Checked = _settings.DarkMode;
 
         _showCpuBox.Checked = _settings.ShowCpu;
         _showGpuBox.Checked = _settings.ShowGpu;
@@ -251,6 +308,7 @@ public sealed class SettingsForm : Form
             TrayFontChoice.JetBrainsMono => 3,
             _ => 0,
         };
+        _iconOutlineBox.Checked = _settings.IconOutline;
 
         _tempMinUpDown.Value = (decimal)_settings.TempGradientMinC;
         _tempMaxUpDown.Value = (decimal)_settings.TempGradientMaxC;
@@ -264,6 +322,7 @@ public sealed class SettingsForm : Form
         _settings.ShowSplash = _showSplashBox.Checked;
         _settings.EnableLogging = _enableLoggingBox.Checked;
         _settings.DetailsAlwaysOnTop = _alwaysOnTopBox.Checked;
+        _settings.DarkMode = _darkModeBox.Checked;
 
         if (_autostartBox.Checked != _autostartWasEnabled)
         {
@@ -303,6 +362,7 @@ public sealed class SettingsForm : Form
             3 => TrayFontChoice.JetBrainsMono,
             _ => TrayFontChoice.SegoeUI,
         };
+        _settings.IconOutline = _iconOutlineBox.Checked;
 
         // Zabezpieczenie przed Max <= Min, ktore zepsuloby dzielenie w gradiencie
         var tempMin = (float)_tempMinUpDown.Value;

@@ -14,14 +14,10 @@ public sealed class TrayApplicationContext : ApplicationContext
     private int? _lastWanLatencyMs;
     private readonly HistoryBuffer _history = new();
 
-    private readonly ToolStripMenuItem _settingsMenuItem;
     private readonly ToolStripMenuItem _infoMenuItem;
+    private readonly ToolStripMenuItem _sensorsMenuItem;
+    private readonly ToolStripMenuItem _settingsMenuItem;
     private readonly ToolStripMenuItem _exitMenuItem;
-
-    // Windows ZAWSZE wysyla pojedyncze klikniecie (Click) jako pierwsza polowe
-    // podwojnego kliknieca - bez tego opoznienia klikniecie x2 otwieraloby i
-    // wykresy (od pojedynczego) i ustawienia (od podwojnego) za kazdym razem.
-    private readonly System.Windows.Forms.Timer _singleClickTimer = new() { Interval = SystemInformation.DoubleClickTime };
 
     public TrayApplicationContext()
     {
@@ -31,6 +27,15 @@ public sealed class TrayApplicationContext : ApplicationContext
         _sensorReader = new SensorReader(_settings);
         _wanMonitor = new WanMonitor();
 
+        // Samo-naprawa: jesli autostart jest wlaczony, odswiezamy zadanie na
+        // BIEZACA sciezke .exe przy kazdym starcie. Bez tego przeniesienie
+        // programu (nowy build, przeinstalowanie w innym miejscu) zostawia
+        // zadanie wskazujace na stary, martwy plik - z pozoru wlaczone
+        // (IsEnabled() widzi tylko czy zadanie ISTNIEJE, nie czy sciezka jest
+        // aktualna), ale realnie nic nie uruchamia przy logowaniu.
+        if (AutostartManager.IsEnabled())
+            AutostartManager.SetEnabled(true);
+
         var splashImage = BrandingImage.Load();
         if (_settings.ShowSplash && splashImage != null)
         {
@@ -38,12 +43,14 @@ public sealed class TrayApplicationContext : ApplicationContext
             splash.Show(); // niemodalny - reszta inicjalizacji (tray, timer) leci od razu obok
         }
 
-        _settingsMenuItem = new ToolStripMenuItem(Localization.T("settings"), null, OnSettingsClicked);
         _infoMenuItem = new ToolStripMenuItem(Localization.T("info"), null, OnInfoClicked);
+        _sensorsMenuItem = new ToolStripMenuItem(Localization.T("sensors"), null, OnSensorsClicked);
+        _settingsMenuItem = new ToolStripMenuItem(Localization.T("settings"), null, OnSettingsClicked);
         _exitMenuItem = new ToolStripMenuItem(Localization.T("exit"), null, OnExitClicked);
 
         var menu = new ContextMenuStrip();
         menu.Items.Add(_infoMenuItem);
+        menu.Items.Add(_sensorsMenuItem);
         menu.Items.Add(_settingsMenuItem);
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(_exitMenuItem);
@@ -52,16 +59,13 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             Visible = true,
             ContextMenuStrip = menu,
-            Icon = TrayIconRenderer.Render("...", Color.Gray, _settings.IconSize, _settings.TrayFont),
+            Icon = TrayIconRenderer.Render("...", Color.Gray, _settings.IconSize, _settings.TrayFont, _settings.IconOutline),
             Text = AppInfo.AppName,
         };
+        // Sam klik lewym otwiera wykresy - bez opoznienia na podwojny klik,
+        // bo dwuklik juz nie robi nic osobnego (wczesniej otwieral ustawienia,
+        // usuniete na zyczenie - ustawienia sa tylko w menu prawego klikniecia).
         _trayIcon.MouseClick += OnTrayIconMouseClick;
-        _trayIcon.MouseDoubleClick += OnTrayIconMouseDoubleClick;
-        _singleClickTimer.Tick += (_, _) =>
-        {
-            _singleClickTimer.Stop();
-            ShowDetailsForm();
-        };
 
         _timer = new System.Windows.Forms.Timer { Interval = _settings.RefreshIntervalMs };
         _timer.Tick += async (_, _) => await RefreshAsync();
@@ -78,7 +82,18 @@ public sealed class TrayApplicationContext : ApplicationContext
         if (_settings.ShowWan)
             _lastWanLatencyMs = await _wanMonitor.MeasureLatencyMsAsync(_settings.WanPingHost);
 
-        _history.Add(new HistorySample(DateTime.UtcNow, _lastSnapshot.CpuTempC, _lastSnapshot.GpuTempC, _lastSnapshot.VrmTempC, _lastWanLatencyMs));
+        var motherboardSensors = _sensorReader.GetMotherboardSensors();
+        // Niektore plyty maja WIECEJ NIZ JEDEN sensor o tej samej nazwie (np.
+        // "Chipset" jako napiecie ORAZ jako osobna temperatura) - sama nazwa
+        // nie jest unikalnym kluczem. GroupBy+First zamiast ToDictionary,
+        // ktore rzucaloby wyjatek na pierwszym duplikacie (co sie realnie
+        // zdarzylo - "Chipset" 0.3V i "Chipset" 40C na tej samej plycie).
+        var motherboardDict = motherboardSensors
+            .Where(s => s.Value.HasValue)
+            .GroupBy(s => $"{s.Name} ({s.Unit})")
+            .ToDictionary(g => g.Key, g => g.First().Value!.Value);
+
+        _history.Add(new HistorySample(DateTime.UtcNow, _lastSnapshot.CpuTempC, _lastSnapshot.GpuTempC, _lastSnapshot.VrmTempC, _lastWanLatencyMs, motherboardDict));
 
         if (_settings.EnableLogging)
             ReadingsLogger.Log(DateTime.Now, _lastSnapshot.CpuTempC, _lastSnapshot.GpuTempC, _lastSnapshot.VrmTempC, _lastWanLatencyMs);
@@ -130,7 +145,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
 
         var oldIcon = _trayIcon.Icon;
-        _trayIcon.Icon = TrayIconRenderer.Render(iconText, iconColor, _settings.IconSize, _settings.TrayFont);
+        _trayIcon.Icon = TrayIconRenderer.Render(iconText, iconColor, _settings.IconSize, _settings.TrayFont, _settings.IconOutline);
         oldIcon?.Dispose();
 
         _trayIcon.Text = BuildTooltip();
@@ -156,18 +171,7 @@ public sealed class TrayApplicationContext : ApplicationContext
     private void OnTrayIconMouseClick(object? sender, MouseEventArgs e)
     {
         if (e.Button != MouseButtons.Left) return;
-        // Start/restart opoznionego pojedynczego kliknieca - jesli w tym czasie
-        // przyjdzie MouseDoubleClick, ten timer zostanie tam zatrzymany i
-        // wykresy sie nie otworza.
-        _singleClickTimer.Stop();
-        _singleClickTimer.Start();
-    }
-
-    private void OnTrayIconMouseDoubleClick(object? sender, MouseEventArgs e)
-    {
-        if (e.Button != MouseButtons.Left) return;
-        _singleClickTimer.Stop(); // anuluj oczekujace pojedyncze klikniecie
-        OnSettingsClicked(sender, e);
+        ShowDetailsForm();
     }
 
     private void ShowDetailsForm()
@@ -180,8 +184,13 @@ public sealed class TrayApplicationContext : ApplicationContext
     {
         var (cpuName, gpuName) = _sensorReader.GetHardwareNames();
         var ramGb = SystemInfo.GetTotalRamGb();
-        var motherboardSensors = _sensorReader.GetMotherboardSensors();
-        using var form = new InfoForm(cpuName, gpuName, ramGb, motherboardSensors);
+        using var form = new InfoForm(cpuName, gpuName, ramGb, _settings);
+        form.ShowDialog();
+    }
+
+    private void OnSensorsClicked(object? sender, EventArgs e)
+    {
+        using var form = new SensorsForm(() => _sensorReader.GetMotherboardSensors(), () => _history.Snapshot(), _settings);
         form.ShowDialog();
     }
 
@@ -192,10 +201,11 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             Localization.CurrentLanguage = _settings.Language;
             _timer.Interval = _settings.RefreshIntervalMs;
-            _settingsMenuItem.Text = Localization.T("settings");
             _infoMenuItem.Text = Localization.T("info");
+            _sensorsMenuItem.Text = Localization.T("sensors");
+            _settingsMenuItem.Text = Localization.T("settings");
             _exitMenuItem.Text = Localization.T("exit");
-            _ = RefreshAsync(); // od razu odswiez ikone - nowy rozmiar/gradient
+            _ = RefreshAsync(); // od razu odswiez ikone - nowy rozmiar/gradient/kontur
         }
     }
 
@@ -203,7 +213,6 @@ public sealed class TrayApplicationContext : ApplicationContext
     {
         _trayIcon.Visible = false;
         _timer.Stop();
-        _singleClickTimer.Stop();
         _sensorReader.Dispose();
         Application.Exit();
     }

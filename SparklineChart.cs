@@ -16,6 +16,12 @@ public sealed class SparklineChart : Panel
     public float MinValue { get; set; }
     public float MaxValue { get; set; }
 
+    // Dla dowolnych czujnikow plyty glownej (napiecia, obroty wentylatorow,
+    // rozne temperatury) nie znamy z gory sensownego sztywnego zakresu jak
+    // przy CPU/GPU/WAN - z automatu liczymy min/max z tego, co faktycznie
+    // jest w danych, zamiast polegac na MinValue/MaxValue powyzej.
+    public bool AutoRange { get; set; }
+
     // Doklejane do wartosci w tooltipie, np. "\u00b0C" albo " ms"
     public string Unit { get; set; } = "";
 
@@ -44,6 +50,24 @@ public sealed class SparklineChart : Panel
         var now = DateTime.UtcNow;
         var windowSeconds = HistoryBuffer.Window.TotalSeconds;
 
+        float effectiveMin = MinValue;
+        float effectiveMax = MaxValue;
+        if (AutoRange)
+        {
+            float? min = null, max = null;
+            foreach (var (_, value) in data)
+            {
+                if (value is not float v) continue;
+                if (min is null || v < min) min = v;
+                if (max is null || v > max) max = v;
+            }
+            if (min is float mn && max is float mx)
+            {
+                effectiveMin = mn;
+                effectiveMax = mx > mn ? mx : mn + 1f; // unikamy dzielenia przez zero
+            }
+        }
+
         PointF? prevPoint = null;
         float? prevValue = null;
 
@@ -63,13 +87,13 @@ public sealed class SparklineChart : Panel
                 continue;
             }
 
-            var t = GradientPalette.Normalize(value.Value, MinValue, MaxValue);
+            var t = GradientPalette.Normalize(value.Value, effectiveMin, effectiveMax);
             var y = Height - t * Height;
             var point = new PointF(x, y);
 
             if (prevPoint is PointF pp && prevValue is float pv)
             {
-                var prevT = GradientPalette.Normalize(pv, MinValue, MaxValue);
+                var prevT = GradientPalette.Normalize(pv, effectiveMin, effectiveMax);
                 var segmentColor = GradientPalette.Sample((t + prevT) / 2f);
                 using var pen = new Pen(segmentColor, 2f);
                 g.DrawLine(pen, pp, point);

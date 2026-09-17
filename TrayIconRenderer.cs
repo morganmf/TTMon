@@ -32,7 +32,7 @@ public static class TrayIconRenderer
         _ => (0.64f, 0.81f), // Medium
     };
 
-    public static Icon Render(string text, Color color, IconSizeLevel sizeLevel, TrayFontChoice fontChoice)
+    public static Icon Render(string text, Color color, IconSizeLevel sizeLevel, TrayFontChoice fontChoice, bool outline)
     {
         using var bmp = new Bitmap(SourceSizePx, SourceSizePx);
         using (var g = Graphics.FromImage(bmp))
@@ -53,6 +53,19 @@ public static class TrayIconRenderer
             using var matrix = new Matrix();
             matrix.Translate(translateX, translateY);
             path.Transform(matrix);
+
+            // Kontur pod spodem (czarny, polprzezroczysty) - dopiero na to
+            // kolorowy wypelnienie. Pomaga na paskach zadan z wlaczona
+            // przezroczystoscia/jasnym tlem, gdzie same nasycone kolory
+            // gradientu czasem gina w tle.
+            if (outline)
+            {
+                using var outlinePen = new Pen(Color.FromArgb(200, 0, 0, 0), SourceSizePx * 0.045f)
+                {
+                    LineJoin = LineJoin.Round,
+                };
+                g.DrawPath(outlinePen, path);
+            }
 
             using var brush = new SolidBrush(color);
             g.FillPath(brush, path);

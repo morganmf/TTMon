@@ -18,7 +18,7 @@ public static class Localization
         ["autostart"]     = ("Uruchamiaj z Windows", "Start with Windows"),
         ["autostart_failed"] = ("Nie udało się zmienić ustawienia autostartu (sprawdź uprawnienia).", "Failed to change autostart setting (check permissions)."),
         ["show_splash"]   = ("Pokazuj ekran powitalny", "Show splash screen"),
-        ["enable_logging"] = ("Zapisuj odczyty do pliku .txt", "Log readings to .txt file"),
+        ["enable_logging"] = ("Zapisuj odczyty do pliku .csv", "Log readings to .csv file"),
         ["details_always_on_top"] = ("Okienko z wykresami zawsze na wierzchu", "Charts window always on top"),
         ["icon_size"]        = ("Wielkość tekstu w ikonie", "Icon text size"),
         ["icon_size_small"]  = ("Mały", "Small"),
@@ -64,8 +64,16 @@ public static class Localization
         ["info_gpu"]        = ("GPU", "GPU"),
         ["info_ram"]        = ("RAM", "RAM"),
         ["info_unknown"]    = ("nie wykryto", "not detected"),
-        ["info_motherboard_title"] = ("Czujniki płyty głównej (test)", "Motherboard sensors (test)"),
-        ["info_motherboard_none"]  = ("brak wykrytych czujników", "no sensors detected"),
+
+        ["sensors"]              = ("Sensory", "Sensors"),
+        ["sensors_title"]        = ("Czujniki płyty głównej", "Motherboard sensors"),
+        ["sensors_col_name"]     = ("Nazwa", "Name"),
+        ["sensors_col_value"]    = ("Wartość", "Value"),
+        ["sensors_select_hint"]  = ("Wybierz czujnik z listy", "Select a sensor from the list"),
+
+        ["save"]         = ("Zapisz", "Save"),
+        ["dark_mode"]    = ("Tryb ciemny", "Dark mode"),
+        ["icon_outline"] = ("Kontur wokół cyfr w ikonie", "Icon digit outline"),
 
         ["details_title"] = ("TTMon - podgląd", "TTMon - overview"),
     };

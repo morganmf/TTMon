@@ -1,15 +1,23 @@
 namespace TTMon;
 
-// Dopisuje jedna linie na kazdy odczyt do pliku .txt (format latwy do otwarcia
-// w Excelu - srednik jako separator). Wylaczone domyslnie, wlaczane w
-// ustawieniach. Blad zapisu (np. brak uprawnien) NIE wywala aplikacji - po
-// prostu dany wpis przepada.
+// Dopisuje jedna linie na kazdy odczyt do pliku .csv (srednik jako separator -
+// Excel otwiera to natywnie jako czytelna tabele przy dwukliku, mozna od razu
+// robic wykresy tak samo jak z prawdziwego .xlsx). Wylaczone domyslnie,
+// wlaczane w ustawieniach. Blad zapisu (np. brak uprawnien) NIE wywala
+// aplikacji - po prostu dany wpis przepada.
+//
+// UWAGA: swiadomie NIE .xlsx - ten format trzeba wczytac do pamieci w calosci,
+// dopisac wiersz i zapisac caly plik na nowo (to ZIP z XML w srodku, nie da
+// sie po prostu dopisac linijki na koncu). Przy domyslnym interwale 2s to
+// dziesiatki tysiecy wierszy dziennie - odczyt+zapis calego pliku przy KAZDEJ
+// probce zacząłby zauwazalnie spowalniac appke, tym bardziej im dluzej dziala.
+// .csv skaluje sie bez tego problemu, a Excel i tak otwiera go jako tabele.
 public static class ReadingsLogger
 {
     public static string LogFilePath =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TTMon", "readings.txt");
+            "TTMon", "readings.csv");
 
     public static void Log(DateTime timestamp, float? cpuTempC, float? gpuTempC, float? vrmTempC, int? wanLatencyMs)
     {

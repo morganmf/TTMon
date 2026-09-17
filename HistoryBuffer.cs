@@ -1,6 +1,12 @@
 namespace TTMon;
 
-public sealed record HistorySample(DateTime Timestamp, float? CpuTempC, float? GpuTempC, float? VrmTempC, int? WanLatencyMs);
+public sealed record HistorySample(
+    DateTime Timestamp,
+    float? CpuTempC,
+    float? GpuTempC,
+    float? VrmTempC,
+    int? WanLatencyMs,
+    IReadOnlyDictionary<string, float> MotherboardSensors);
 
 // Trzyma probki z ostatnich 180 sekund (staly czas, nie stala liczba probek -
 // dziala poprawnie niezaleznie od RefreshIntervalMs). Dziala wylacznie na watku

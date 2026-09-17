@@ -22,7 +22,7 @@
 ; kompilacje - zostawiona zakomentowana domyslnie.
 
 #define MyAppName "TTMon"
-#define MyAppVersion "0.11beta"
+#define MyAppVersion "0.12-beta"
 #define MyAppPublisher "Blaoyne"
 #define MyAppExeName "TTMon.exe"
 
