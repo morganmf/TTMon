@@ -29,12 +29,23 @@ public static class Localization
         ["show_gpu"] = ("Pokazuj temperaturę GPU", "Show GPU temperature"),
         ["show_wan"] = ("Pokazuj opóźnienie WAN", "Show WAN latency"),
         ["show_vrm"] = ("Pokazuj temperaturę VRM MOS", "Show VRM MOS temperature"),
+        ["show_cpu_fan"] = ("Pokazuj obroty wentylatora CPU", "Show CPU fan speed"),
 
         ["tray_font"]             = ("Czcionka ikony", "Icon font"),
         ["tray_font_segoe"]       = ("Segoe UI (domyślna)", "Segoe UI (default)"),
         ["tray_font_bahnschrift"] = ("Bahnschrift", "Bahnschrift"),
         ["tray_font_dosis"]       = ("Dosis", "Dosis"),
         ["tray_font_jetbrains"]   = ("JetBrains Mono", "JetBrains Mono"),
+        ["tray_font_volvo"]       = ("Volvo Broad", "Volvo Broad"),
+        ["tray_font_firacode_mono"]  = ("Fira Code Mono", "Fira Code Mono"),
+        ["tray_font_firacode_propo"] = ("Fira Code Propo", "Fira Code Propo"),
+        ["tray_font_envycoder_mono"]  = ("Envy Code R Mono", "Envy Code R Mono"),
+        ["tray_font_envycoder_propo"] = ("Envy Code R Propo", "Envy Code R Propo"),
+        ["tray_font_terminess_mono"]  = ("Terminess Mono", "Terminess Mono"),
+        ["tray_font_terminess_propo"] = ("Terminess Propo", "Terminess Propo"),
+        ["tray_font_meslo"]           = ("MesloLGL Mono", "MesloLGL Mono"),
+        ["tray_font_hurmit_mono"]     = ("Hurmit Mono", "Hurmit Mono"),
+        ["tray_font_hurmit_propo"]    = ("Hurmit Propo", "Hurmit Propo"),
 
         ["cpu_vendor"]       = ("Producent CPU", "CPU vendor"),
         ["cpu_vendor_auto"]  = ("Automatycznie", "Automatic"),
@@ -52,8 +63,7 @@ public static class Localization
         ["gradient_wan_min"]  = ("Minimum (ms)", "Minimum (ms)"),
         ["gradient_wan_max"]  = ("Maksimum (ms)", "Maximum (ms)"),
 
-        ["ok"]     = ("OK", "OK"),
-        ["cancel"] = ("Anuluj", "Cancel"),
+        ["close"]  = ("Zamknij", "Close"),
 
         ["wan_offline"] = ("brak", "n/a"),
 
@@ -69,11 +79,19 @@ public static class Localization
         ["sensors_title"]        = ("Czujniki płyty głównej", "Motherboard sensors"),
         ["sensors_col_name"]     = ("Nazwa", "Name"),
         ["sensors_col_value"]    = ("Wartość", "Value"),
+        ["sensors_col_min"]      = ("Min", "Min"),
+        ["sensors_col_max"]      = ("Max", "Max"),
+        ["sensors_col_avg"]      = ("Śr.", "Avg"),
+        ["sensors_hide_inactive"] = ("Ukryj nieaktywne (wartość 0)", "Hide inactive (value 0)"),
         ["sensors_select_hint"]  = ("Wybierz czujnik z listy", "Select a sensor from the list"),
 
         ["save"]         = ("Zapisz", "Save"),
         ["dark_mode"]    = ("Tryb ciemny", "Dark mode"),
         ["icon_outline"] = ("Kontur wokół cyfr w ikonie", "Icon digit outline"),
+        ["icon_background_plate"] = ("Jasne tło pod cyframi w ikonie", "Light background behind icon digits"),
+        ["icon_color_mode"]        = ("Styl kolorowania ikony", "Icon coloring style"),
+        ["icon_color_mode_text"]   = ("Kolorowy tekst (domyślnie)", "Colored text (default)"),
+        ["icon_color_mode_bg"]     = ("Kolorowe tło, auto-kontrast tekstu", "Colored background, auto-contrast text"),
 
         ["details_title"] = ("TTMon - podgląd", "TTMon - overview"),
     };

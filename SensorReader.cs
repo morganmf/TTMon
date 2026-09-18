@@ -7,6 +7,7 @@ public sealed class SensorSnapshot
     public float? CpuTempC { get; init; }
     public float? GpuTempC { get; init; }
     public float? VrmTempC { get; init; }
+    public float? CpuFanRpm { get; init; }
 }
 
 // Cienka warstwa nad LibreHardwareMonitorLib. Otwiera dostep do sprzetu raz,
@@ -98,6 +99,7 @@ public sealed class SensorReader : IDisposable
         float? cpuTemp = null;
         float? gpuTemp = null;
         float? vrmTemp = null;
+        float? cpuFanRpm = null;
 
         // Czytane przy kazdym odswiezeniu, zeby zmiana w ustawieniach dzialala
         // od razu, bez restartu SensorReadera.
@@ -128,6 +130,11 @@ public sealed class SensorReader : IDisposable
             else if (isMotherboard)
             {
                 vrmTemp ??= FindNamedTemperature(hardware, "VRM MOS");
+                // "CPU Fan" wystepuje na wielu plytach DWA razy - jako Control
+                // (procent PWM) i jako Fan (RPM). Bierzemy konkretnie RPM -
+                // bardziej czytelne/uzyteczne jako "predkosc wentylatora" niz
+                // surowy procent sterowania.
+                cpuFanRpm ??= FindNamedFanRpm(hardware, "CPU Fan");
             }
 
             // Niektore plytki/GPU zglaszaja dodatkowe czujniki jako "SubHardware"
@@ -139,12 +146,15 @@ public sealed class SensorReader : IDisposable
                     cpuTemp = FindPackageTemperature(sub);
                 else if (isMatchingGpu && gpuTemp == null)
                     gpuTemp = FindPackageTemperature(sub);
-                else if (isMotherboard && vrmTemp == null)
-                    vrmTemp = FindNamedTemperature(sub, "VRM MOS");
+                else if (isMotherboard)
+                {
+                    if (vrmTemp == null) vrmTemp = FindNamedTemperature(sub, "VRM MOS");
+                    if (cpuFanRpm == null) cpuFanRpm = FindNamedFanRpm(sub, "CPU Fan");
+                }
             }
         }
 
-        return new SensorSnapshot { CpuTempC = cpuTemp, GpuTempC = gpuTemp, VrmTempC = vrmTemp };
+        return new SensorSnapshot { CpuTempC = cpuTemp, GpuTempC = gpuTemp, VrmTempC = vrmTemp, CpuFanRpm = cpuFanRpm };
     }
 
     private static bool IsMatchingCpuName(string? hardwareName, CpuVendorPreference preference)
@@ -184,6 +194,18 @@ public sealed class SensorReader : IDisposable
         foreach (var sensor in hardware.Sensors)
         {
             if (sensor.SensorType == SensorType.Temperature &&
+                sensor.Name.Equals(sensorName, StringComparison.OrdinalIgnoreCase))
+                return sensor.Value;
+        }
+        return null;
+    }
+
+    // Jak FindNamedTemperature, tylko dla czujnikow typu Fan (RPM).
+    private static float? FindNamedFanRpm(IHardware hardware, string sensorName)
+    {
+        foreach (var sensor in hardware.Sensors)
+        {
+            if (sensor.SensorType == SensorType.Fan &&
                 sensor.Name.Equals(sensorName, StringComparison.OrdinalIgnoreCase))
                 return sensor.Value;
         }

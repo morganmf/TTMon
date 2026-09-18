@@ -84,6 +84,16 @@ public sealed class DetailsForm : Form
                 ref y);
         }
 
+        if (_settings.ShowCpuFan)
+        {
+            AddMetricBlock(
+                () => _snapshotProvider().CpuFanRpm is float f ? $"CPU FAN: {f:0} RPM" : "CPU FAN: n/a",
+                () => ColorForFan(_snapshotProvider().CpuFanRpm),
+                () => _historyProvider().Select(s => (s.Timestamp, s.CpuFanRpm)).ToList(),
+                CpuFanMinRpm, CpuFanMaxRpm, " RPM",
+                ref y);
+        }
+
         if (_settings.ShowWan)
         {
             AddMetricBlock(
@@ -101,7 +111,8 @@ public sealed class DetailsForm : Form
         }
 
         y += 10;
-        var closeBtn = new Button { Text = Localization.T("ok"), Left = (ContentWidth - 80) / 2 + 15, Top = y, Width = 80, DialogResult = DialogResult.OK };
+        var closeBtn = new Button { Text = Localization.T("close"), Left = (ContentWidth - 80) / 2 + 15, Top = y, Width = 80, DialogResult = DialogResult.OK };
+        closeBtn.Click += (_, _) => Close();
         Controls.Add(closeBtn);
         AcceptButton = closeBtn;
         CancelButton = closeBtn;
@@ -127,6 +138,19 @@ public sealed class DetailsForm : Form
         _settings.Save();
 
         base.OnFormClosed(e);
+    }
+
+    // Brak twardej "danger" semantyki dla RPM (tak jak przy temperaturze) -
+    // to tylko poglądowy zakres 0-2500 RPM do sensownego kolorowania, nie
+    // ustawienie usera (nie ma tu jednego "poprawnego" zakresu dla kazdego
+    // wentylatora, wiec nie dodajemy kolejnych pol w Ustawieniach).
+    private const float CpuFanMinRpm = 0f;
+    private const float CpuFanMaxRpm = 2500f;
+
+    private Color ColorForFan(float? rpm)
+    {
+        var t = GradientPalette.Normalize(rpm ?? CpuFanMinRpm, CpuFanMinRpm, CpuFanMaxRpm);
+        return GradientPalette.Sample(t);
     }
 
     private Color ColorForTemp(float? valueC)

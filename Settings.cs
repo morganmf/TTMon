@@ -24,7 +24,19 @@ public enum IconSizeLevel { Small, Medium, Large }
 // JetBrainsMono NIE sa czcionkami systemowymi - wymagaja plikow w Resources/
 // dostarczonych przez usera i osadzonych w binarce (patrz EmbeddedFontLoader.cs);
 // jesli pliku nie ma, wybor cicho spada z powrotem na Segoe UI.
-public enum TrayFontChoice { SegoeUI, Bahnschrift, Dosis, JetBrainsMono }
+public enum TrayFontChoice
+{
+    SegoeUI, Bahnschrift, Dosis, JetBrainsMono,
+    VolvoBroad, FiraCodeMono, FiraCodePropo, EnvyCodeRMono, EnvyCodeRPropo,
+    TerminessMono, TerminessPropo, MesloLGLMono, HurmitMono, HurmitPropo,
+}
+
+// ColoredText (domyslne, dotychczasowe): kolorowe cyfry na przezroczystym tle -
+// zalezne od tego co siedzi POD ikona na pasku zadan (stad walka o widocznosc).
+// ColoredBackground (nowe, "bajer" na probe): kolorowa PLYTA jako tlo, tekst
+// czarny/bialy dobierany automatycznie dla kontrastu WZGLEDEM TEJ PLYTY - eliminuje
+// caly problem nieznanego tla, bo my sami definiujemy jedyne tlo jakie sie liczy.
+public enum IconColorMode { ColoredText, ColoredBackground }
 
 public class AppSettings
 {
@@ -34,6 +46,7 @@ public class AppSettings
     public bool ShowGpu { get; set; } = true;
     public bool ShowWan { get; set; } = true;
     public bool ShowVrm { get; set; } = true;
+    public bool ShowCpuFan { get; set; } = true;
 
     public CpuVendorPreference PreferredCpuVendor { get; set; } = CpuVendorPreference.Auto;
     public GpuVendorPreference PreferredGpuVendor { get; set; } = GpuVendorPreference.Auto;
@@ -46,6 +59,8 @@ public class AppSettings
     public int? DetailsWindowX { get; set; }
     public int? DetailsWindowY { get; set; }
     public bool IconOutline { get; set; } = true;
+    public bool IconBackgroundPlate { get; set; } = true;
+    public IconColorMode IconColorMode { get; set; } = IconColorMode.ColoredText;
     public bool DarkMode { get; set; } = false;
 
     // Adres pingowany do pomiaru opoznienia WAN (musi odpowiadac na ICMP)

@@ -16,12 +16,15 @@ public sealed class SettingsForm : Form
     private readonly CheckBox _showCpuBox = new();
     private readonly CheckBox _showGpuBox = new();
     private readonly CheckBox _showVrmBox = new();
+    private readonly CheckBox _showCpuFanBox = new();
     private readonly CheckBox _showWanBox = new();
     private readonly ComboBox _cpuVendorBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _gpuVendorBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _iconSizeBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly ComboBox _trayFontBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
     private readonly CheckBox _iconOutlineBox = new();
+    private readonly CheckBox _iconBackgroundPlateBox = new();
+    private readonly ComboBox _iconColorModeBox = new() { DropDownStyle = ComboBoxStyle.DropDownList };
 
     private readonly NumericUpDown _tempMinUpDown = new() { Minimum = -50, Maximum = 150, DecimalPlaces = 0 };
     private readonly NumericUpDown _tempMaxUpDown = new() { Minimum = -50, Maximum = 150, DecimalPlaces = 0 };
@@ -79,9 +82,10 @@ public sealed class SettingsForm : Form
         _saveBtn.Left = formWidth - 190; _saveBtn.Top = y; _saveBtn.Width = 80;
         _saveBtn.DialogResult = DialogResult.OK;
         _saveBtn.Enabled = false; // odblokowuje sie dopiero po pierwszej realnej zmianie
-        _saveBtn.Click += (_, _) => SaveToSettings();
+        _saveBtn.Click += (_, _) => { SaveToSettings(); Close(); };
 
-        var cancelBtn = new Button { Text = Localization.T("cancel"), Left = formWidth - 100, Top = y, Width = 80, DialogResult = DialogResult.Cancel };
+        var cancelBtn = new Button { Text = Localization.T("close"), Left = formWidth - 100, Top = y, Width = 80, DialogResult = DialogResult.Cancel };
+        cancelBtn.Click += (_, _) => Close();
 
         Controls.Add(_saveBtn);
         Controls.Add(cancelBtn);
@@ -155,7 +159,7 @@ public sealed class SettingsForm : Form
 
     private int AddSensorsGroup(int formWidth, int top)
     {
-        var group = new GroupBox { Text = Localization.T("section_sensors"), Left = 15, Top = top, Width = formWidth - 30, Height = 325 };
+        var group = new GroupBox { Text = Localization.T("section_sensors"), Left = 15, Top = top, Width = formWidth - 30, Height = 411 };
         int gy = 22;
 
         _showCpuBox.Text = Localization.T("show_cpu");
@@ -194,6 +198,11 @@ public sealed class SettingsForm : Form
         group.Controls.Add(_showVrmBox);
         gy += 28;
 
+        _showCpuFanBox.Text = Localization.T("show_cpu_fan");
+        _showCpuFanBox.Left = 15; _showCpuFanBox.Top = gy; _showCpuFanBox.Width = 300;
+        group.Controls.Add(_showCpuFanBox);
+        gy += 28;
+
         _showWanBox.Text = Localization.T("show_wan");
         _showWanBox.Left = 15; _showWanBox.Top = gy; _showWanBox.Width = 300;
         group.Controls.Add(_showWanBox);
@@ -214,6 +223,11 @@ public sealed class SettingsForm : Form
         {
             Localization.T("tray_font_segoe"), Localization.T("tray_font_bahnschrift"),
             Localization.T("tray_font_dosis"), Localization.T("tray_font_jetbrains"),
+            Localization.T("tray_font_volvo"), Localization.T("tray_font_firacode_mono"),
+            Localization.T("tray_font_firacode_propo"), Localization.T("tray_font_envycoder_mono"),
+            Localization.T("tray_font_envycoder_propo"), Localization.T("tray_font_terminess_mono"),
+            Localization.T("tray_font_terminess_propo"), Localization.T("tray_font_meslo"),
+            Localization.T("tray_font_hurmit_mono"), Localization.T("tray_font_hurmit_propo"),
         });
         _trayFontBox.Left = 150; _trayFontBox.Top = gy; _trayFontBox.Width = 160;
         group.Controls.Add(trayFontLabel);
@@ -223,6 +237,21 @@ public sealed class SettingsForm : Form
         _iconOutlineBox.Text = Localization.T("icon_outline");
         _iconOutlineBox.Left = 15; _iconOutlineBox.Top = gy; _iconOutlineBox.Width = 300;
         group.Controls.Add(_iconOutlineBox);
+        gy += 26;
+
+        _iconBackgroundPlateBox.Text = Localization.T("icon_background_plate");
+        _iconBackgroundPlateBox.Left = 15; _iconBackgroundPlateBox.Top = gy; _iconBackgroundPlateBox.Width = 300;
+        group.Controls.Add(_iconBackgroundPlateBox);
+        gy += 32;
+
+        var iconColorModeLabel = new Label { Text = Localization.T("icon_color_mode"), Left = 15, Top = gy + 3, Width = 130 };
+        _iconColorModeBox.Items.AddRange(new object[]
+        {
+            Localization.T("icon_color_mode_text"), Localization.T("icon_color_mode_bg"),
+        });
+        _iconColorModeBox.Left = 150; _iconColorModeBox.Top = gy; _iconColorModeBox.Width = 160;
+        group.Controls.Add(iconColorModeLabel);
+        group.Controls.Add(_iconColorModeBox);
 
         Controls.Add(group);
         return top + group.Height + 10;
@@ -235,8 +264,8 @@ public sealed class SettingsForm : Form
         var minLabel = new Label { Text = Localization.T("gradient_temp_min"), Left = 15, Top = 30, Width = 90 };
         _tempMinUpDown.Left = 105; _tempMinUpDown.Top = 27; _tempMinUpDown.Width = 60;
 
-        var maxLabel = new Label { Text = Localization.T("gradient_temp_max"), Left = 185, Top = 30, Width = 90 };
-        _tempMaxUpDown.Left = 275; _tempMaxUpDown.Top = 27; _tempMaxUpDown.Width = 55;
+        var maxLabel = new Label { Text = Localization.T("gradient_temp_max"), Left = 180, Top = 30, Width = 90 };
+        _tempMaxUpDown.Left = 270; _tempMaxUpDown.Top = 27; _tempMaxUpDown.Width = 55;
 
         group.Controls.Add(minLabel);
         group.Controls.Add(_tempMinUpDown);
@@ -254,8 +283,8 @@ public sealed class SettingsForm : Form
         var minLabel = new Label { Text = Localization.T("gradient_wan_min"), Left = 15, Top = 30, Width = 90 };
         _wanMinUpDown.Left = 105; _wanMinUpDown.Top = 27; _wanMinUpDown.Width = 60;
 
-        var maxLabel = new Label { Text = Localization.T("gradient_wan_max"), Left = 185, Top = 30, Width = 90 };
-        _wanMaxUpDown.Left = 275; _wanMaxUpDown.Top = 27; _wanMaxUpDown.Width = 55;
+        var maxLabel = new Label { Text = Localization.T("gradient_wan_max"), Left = 180, Top = 30, Width = 90 };
+        _wanMaxUpDown.Left = 270; _wanMaxUpDown.Top = 27; _wanMaxUpDown.Width = 55;
 
         group.Controls.Add(minLabel);
         group.Controls.Add(_wanMinUpDown);
@@ -280,6 +309,7 @@ public sealed class SettingsForm : Form
         _showCpuBox.Checked = _settings.ShowCpu;
         _showGpuBox.Checked = _settings.ShowGpu;
         _showVrmBox.Checked = _settings.ShowVrm;
+        _showCpuFanBox.Checked = _settings.ShowCpuFan;
         _showWanBox.Checked = _settings.ShowWan;
 
         _cpuVendorBox.SelectedIndex = _settings.PreferredCpuVendor switch
@@ -306,9 +336,21 @@ public sealed class SettingsForm : Form
             TrayFontChoice.Bahnschrift => 1,
             TrayFontChoice.Dosis => 2,
             TrayFontChoice.JetBrainsMono => 3,
+            TrayFontChoice.VolvoBroad => 4,
+            TrayFontChoice.FiraCodeMono => 5,
+            TrayFontChoice.FiraCodePropo => 6,
+            TrayFontChoice.EnvyCodeRMono => 7,
+            TrayFontChoice.EnvyCodeRPropo => 8,
+            TrayFontChoice.TerminessMono => 9,
+            TrayFontChoice.TerminessPropo => 10,
+            TrayFontChoice.MesloLGLMono => 11,
+            TrayFontChoice.HurmitMono => 12,
+            TrayFontChoice.HurmitPropo => 13,
             _ => 0,
         };
         _iconOutlineBox.Checked = _settings.IconOutline;
+        _iconBackgroundPlateBox.Checked = _settings.IconBackgroundPlate;
+        _iconColorModeBox.SelectedIndex = _settings.IconColorMode == IconColorMode.ColoredBackground ? 1 : 0;
 
         _tempMinUpDown.Value = (decimal)_settings.TempGradientMinC;
         _tempMaxUpDown.Value = (decimal)_settings.TempGradientMaxC;
@@ -334,6 +376,7 @@ public sealed class SettingsForm : Form
         _settings.ShowCpu = _showCpuBox.Checked;
         _settings.ShowGpu = _showGpuBox.Checked;
         _settings.ShowVrm = _showVrmBox.Checked;
+        _settings.ShowCpuFan = _showCpuFanBox.Checked;
         _settings.ShowWan = _showWanBox.Checked;
 
         _settings.PreferredCpuVendor = _cpuVendorBox.SelectedIndex switch
@@ -360,9 +403,21 @@ public sealed class SettingsForm : Form
             1 => TrayFontChoice.Bahnschrift,
             2 => TrayFontChoice.Dosis,
             3 => TrayFontChoice.JetBrainsMono,
+            4 => TrayFontChoice.VolvoBroad,
+            5 => TrayFontChoice.FiraCodeMono,
+            6 => TrayFontChoice.FiraCodePropo,
+            7 => TrayFontChoice.EnvyCodeRMono,
+            8 => TrayFontChoice.EnvyCodeRPropo,
+            9 => TrayFontChoice.TerminessMono,
+            10 => TrayFontChoice.TerminessPropo,
+            11 => TrayFontChoice.MesloLGLMono,
+            12 => TrayFontChoice.HurmitMono,
+            13 => TrayFontChoice.HurmitPropo,
             _ => TrayFontChoice.SegoeUI,
         };
         _settings.IconOutline = _iconOutlineBox.Checked;
+        _settings.IconBackgroundPlate = _iconBackgroundPlateBox.Checked;
+        _settings.IconColorMode = _iconColorModeBox.SelectedIndex == 1 ? IconColorMode.ColoredBackground : IconColorMode.ColoredText;
 
         // Zabezpieczenie przed Max <= Min, ktore zepsuloby dzielenie w gradiencie
         var tempMin = (float)_tempMinUpDown.Value;

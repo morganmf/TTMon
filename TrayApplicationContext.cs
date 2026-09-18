@@ -19,6 +19,18 @@ public sealed class TrayApplicationContext : ApplicationContext
     private readonly ToolStripMenuItem _settingsMenuItem;
     private readonly ToolStripMenuItem _exitMenuItem;
 
+    // KAZDE z tych okien moze byc otwarte tylko RAZ naraz - kolejne klikniecie
+    // aktywuje juz otwarte zamiast tworzyc nowe. Bez tego (poprzedni blad):
+    // ShowDialog() blokuje watek UI WLASNA, zagniezdzona petla komunikatow,
+    // ale ta petla DALEJ obsluguje klikniecia w ikone trayu - kazde kolejne
+    // klikniecie w trakcie otwierania otwieralo NASTEPNE okno wewnatrz
+    // poprzedniego, w nieskonczonosc. Rozwiazanie: niemodalne Show() (nie
+    // ShowDialog()) + trzymanie jednej referencji per typ okna.
+    private DetailsForm? _detailsForm;
+    private InfoForm? _infoForm;
+    private SensorsForm? _sensorsForm;
+    private SettingsForm? _settingsForm;
+
     public TrayApplicationContext()
     {
         _settings = AppSettings.Load();
@@ -30,9 +42,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         // Samo-naprawa: jesli autostart jest wlaczony, odswiezamy zadanie na
         // BIEZACA sciezke .exe przy kazdym starcie. Bez tego przeniesienie
         // programu (nowy build, przeinstalowanie w innym miejscu) zostawia
-        // zadanie wskazujace na stary, martwy plik - z pozoru wlaczone
-        // (IsEnabled() widzi tylko czy zadanie ISTNIEJE, nie czy sciezka jest
-        // aktualna), ale realnie nic nie uruchamia przy logowaniu.
+        // zadanie wskazujace na stary, martwy plik.
         if (AutostartManager.IsEnabled())
             AutostartManager.SetEnabled(true);
 
@@ -59,12 +69,9 @@ public sealed class TrayApplicationContext : ApplicationContext
         {
             Visible = true,
             ContextMenuStrip = menu,
-            Icon = TrayIconRenderer.Render("...", Color.Gray, _settings.IconSize, _settings.TrayFont, _settings.IconOutline),
+            Icon = TrayIconRenderer.Render("...", Color.Gray, _settings.IconSize, _settings.TrayFont, _settings.IconOutline, _settings.IconBackgroundPlate, _settings.IconColorMode),
             Text = AppInfo.AppName,
         };
-        // Sam klik lewym otwiera wykresy - bez opoznienia na podwojny klik,
-        // bo dwuklik juz nie robi nic osobnego (wczesniej otwieral ustawienia,
-        // usuniete na zyczenie - ustawienia sa tylko w menu prawego klikniecia).
         _trayIcon.MouseClick += OnTrayIconMouseClick;
 
         _timer = new System.Windows.Forms.Timer { Interval = _settings.RefreshIntervalMs };
@@ -86,14 +93,20 @@ public sealed class TrayApplicationContext : ApplicationContext
         // Niektore plyty maja WIECEJ NIZ JEDEN sensor o tej samej nazwie (np.
         // "Chipset" jako napiecie ORAZ jako osobna temperatura) - sama nazwa
         // nie jest unikalnym kluczem. GroupBy+First zamiast ToDictionary,
-        // ktore rzucaloby wyjatek na pierwszym duplikacie (co sie realnie
-        // zdarzylo - "Chipset" 0.3V i "Chipset" 40C na tej samej plycie).
+        // ktore rzucaloby wyjatek na pierwszym duplikacie.
         var motherboardDict = motherboardSensors
             .Where(s => s.Value.HasValue)
             .GroupBy(s => $"{s.Name} ({s.Unit})")
             .ToDictionary(g => g.Key, g => g.First().Value!.Value);
 
-        _history.Add(new HistorySample(DateTime.UtcNow, _lastSnapshot.CpuTempC, _lastSnapshot.GpuTempC, _lastSnapshot.VrmTempC, _lastWanLatencyMs, motherboardDict));
+        _history.Add(new HistorySample(
+            DateTime.UtcNow,
+            _lastSnapshot.CpuTempC,
+            _lastSnapshot.GpuTempC,
+            _lastSnapshot.VrmTempC,
+            _lastSnapshot.CpuFanRpm,
+            _lastWanLatencyMs,
+            motherboardDict));
 
         if (_settings.EnableLogging)
             ReadingsLogger.Log(DateTime.Now, _lastSnapshot.CpuTempC, _lastSnapshot.GpuTempC, _lastSnapshot.VrmTempC, _lastWanLatencyMs);
@@ -111,9 +124,6 @@ public sealed class TrayApplicationContext : ApplicationContext
 
         if (_settings.ShowCpu && _lastSnapshot.CpuTempC is float cpu)
         {
-            // MathF.Round, nie (int)cpu - rzutowanie na int UCINA czesc
-            // ulamkowa (44.6 -> 44) zamiast zaokraglac (44.6 -> 45), co dawalo
-            // niespojnosc z oknem podgladu (DetailsForm zaokragla przez "0").
             iconText = $"{MathF.Round(cpu)}";
             var t = GradientPalette.Normalize(cpu, _settings.TempGradientMinC, _settings.TempGradientMaxC);
             iconColor = GradientPalette.Sample(t);
@@ -145,7 +155,7 @@ public sealed class TrayApplicationContext : ApplicationContext
         }
 
         var oldIcon = _trayIcon.Icon;
-        _trayIcon.Icon = TrayIconRenderer.Render(iconText, iconColor, _settings.IconSize, _settings.TrayFont, _settings.IconOutline);
+        _trayIcon.Icon = TrayIconRenderer.Render(iconText, iconColor, _settings.IconSize, _settings.TrayFont, _settings.IconOutline, _settings.IconBackgroundPlate, _settings.IconColorMode);
         oldIcon?.Dispose();
 
         _trayIcon.Text = BuildTooltip();
@@ -153,6 +163,9 @@ public sealed class TrayApplicationContext : ApplicationContext
 
     private string BuildTooltip()
     {
+        // Kolejnosc CELOWA: WAN przed FAN. Gdy trzeba cokolwiek uciac (patrz
+        // nizej), leci od konca listy - FAN (najnowszy, najmniej krytyczny)
+        // znika pierwszy, WAN zostaje.
         var parts = new List<string>();
         if (_settings.ShowCpu)
             parts.Add($"CPU: {(_lastSnapshot.CpuTempC is float c ? $"{c:0}\u00b0C" : "n/a")}");
@@ -162,51 +175,94 @@ public sealed class TrayApplicationContext : ApplicationContext
             parts.Add($"VRM: {(_lastSnapshot.VrmTempC is float v ? $"{v:0}\u00b0C" : "n/a")}");
         if (_settings.ShowWan)
             parts.Add($"WAN: {(_lastWanLatencyMs is int ms ? $"{ms} ms" : Localization.T("wan_offline"))}");
+        if (_settings.ShowCpuFan)
+            parts.Add($"FAN: {(_lastSnapshot.CpuFanRpm is float f ? $"{f:0} RPM" : "n/a")}");
 
-        // NotifyIcon.Text ma limit 63 znakow w WinForms
-        var text = string.Join("  |  ", parts);
-        return text.Length > 63 ? text[..63] : text;
+        // NotifyIcon.Text ma TWARDY limit 63 znakow w WinForms. Poprzednio
+        // ucinalismy string w polowie ("text[..63]") - to zawsze obcinalo
+        // WAN, bo byl ostatni na liscie i limit sie wlasnie tam wyrabial po
+        // dodaniu CPU FAN. Teraz usuwamy CALE segmenty od konca (nie
+        // pojedyncze znaki w srodku slowa), az sie zmiesci - dzieki
+        // kolejnosci wyzej, to FAN znika jako pierwszy, nie WAN.
+        while (parts.Count > 0 && string.Join("  |  ", parts).Length > 63)
+            parts.RemoveAt(parts.Count - 1);
+
+        return string.Join("  |  ", parts);
     }
 
     private void OnTrayIconMouseClick(object? sender, MouseEventArgs e)
     {
         if (e.Button != MouseButtons.Left) return;
-        ShowDetailsForm();
-    }
-
-    private void ShowDetailsForm()
-    {
-        using var form = new DetailsForm(() => _lastSnapshot, () => _lastWanLatencyMs, () => _history.Snapshot(), _settings);
-        form.ShowDialog();
+        ShowOrActivate(ref _detailsForm, () =>
+        {
+            var form = new DetailsForm(() => _lastSnapshot, () => _lastWanLatencyMs, () => _history.Snapshot(), _settings);
+            form.FormClosed += (_, _) => _detailsForm = null;
+            return form;
+        });
     }
 
     private void OnInfoClicked(object? sender, EventArgs e)
     {
-        var (cpuName, gpuName) = _sensorReader.GetHardwareNames();
-        var ramGb = SystemInfo.GetTotalRamGb();
-        using var form = new InfoForm(cpuName, gpuName, ramGb, _settings);
-        form.ShowDialog();
+        ShowOrActivate(ref _infoForm, () =>
+        {
+            var (cpuName, gpuName) = _sensorReader.GetHardwareNames();
+            var ramGb = SystemInfo.GetTotalRamGb();
+            var form = new InfoForm(cpuName, gpuName, ramGb, _settings);
+            form.FormClosed += (_, _) => _infoForm = null;
+            return form;
+        });
     }
 
     private void OnSensorsClicked(object? sender, EventArgs e)
     {
-        using var form = new SensorsForm(() => _sensorReader.GetMotherboardSensors(), () => _history.Snapshot(), _settings);
-        form.ShowDialog();
+        ShowOrActivate(ref _sensorsForm, () =>
+        {
+            var form = new SensorsForm(() => _sensorReader.GetMotherboardSensors(), () => _history.Snapshot(), _settings);
+            form.FormClosed += (_, _) => _sensorsForm = null;
+            return form;
+        });
     }
 
     private void OnSettingsClicked(object? sender, EventArgs e)
     {
-        using var form = new SettingsForm(_settings);
-        if (form.ShowDialog() == DialogResult.OK)
+        if (_settingsForm != null && !_settingsForm.IsDisposed)
         {
-            Localization.CurrentLanguage = _settings.Language;
-            _timer.Interval = _settings.RefreshIntervalMs;
-            _infoMenuItem.Text = Localization.T("info");
-            _sensorsMenuItem.Text = Localization.T("sensors");
-            _settingsMenuItem.Text = Localization.T("settings");
-            _exitMenuItem.Text = Localization.T("exit");
-            _ = RefreshAsync(); // od razu odswiez ikone - nowy rozmiar/gradient/kontur
+            _settingsForm.Activate();
+            return;
         }
+
+        var form = new SettingsForm(_settings);
+        form.FormClosed += (_, _) =>
+        {
+            if (form.DialogResult == DialogResult.OK)
+            {
+                Localization.CurrentLanguage = _settings.Language;
+                _timer.Interval = _settings.RefreshIntervalMs;
+                _infoMenuItem.Text = Localization.T("info");
+                _sensorsMenuItem.Text = Localization.T("sensors");
+                _settingsMenuItem.Text = Localization.T("settings");
+                _exitMenuItem.Text = Localization.T("exit");
+                _ = RefreshAsync(); // od razu odswiez ikone - nowy rozmiar/gradient/kontur
+            }
+            _settingsForm = null;
+        };
+        _settingsForm = form;
+        form.Show();
+    }
+
+    // Wspolny wzorzec dla okien bez dodatkowej logiki po zamknieciu (Details/
+    // Info/Sensory) - jesli juz otwarte, tylko aktywuje; inaczej tworzy przez
+    // podana fabryke (ktora sama podpina czyszczenie referencji po zamknieciu).
+    private static void ShowOrActivate<TForm>(ref TForm? field, Func<TForm> factory) where TForm : Form
+    {
+        if (field != null && !field.IsDisposed)
+        {
+            field.Activate();
+            return;
+        }
+
+        field = factory();
+        field.Show();
     }
 
     private void OnExitClicked(object? sender, EventArgs e)

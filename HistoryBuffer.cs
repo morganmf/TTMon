@@ -5,6 +5,7 @@ public sealed record HistorySample(
     float? CpuTempC,
     float? GpuTempC,
     float? VrmTempC,
+    float? CpuFanRpm,
     int? WanLatencyMs,
     IReadOnlyDictionary<string, float> MotherboardSensors);
 

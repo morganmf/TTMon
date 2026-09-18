@@ -71,7 +71,8 @@ public sealed class InfoForm : Form
         AddInfoLine($"{Localization.T("info_build_date")}: {AppInfo.BuildDate:yyyy-MM-dd HH:mm}", ref y, contentWidth);
 
         y += 15;
-        var okBtn = new Button { Text = Localization.T("ok"), Left = (contentWidth - 80) / 2 + 15, Top = y, Width = 80, DialogResult = DialogResult.OK };
+        var okBtn = new Button { Text = Localization.T("close"), Left = (contentWidth - 80) / 2 + 15, Top = y, Width = 80, DialogResult = DialogResult.OK };
+        okBtn.Click += (_, _) => Close();
         Controls.Add(okBtn);
         AcceptButton = okBtn;
         CancelButton = okBtn;

@@ -54,12 +54,30 @@ administrator, wtedy F5 tez dziala z podniesionymi uprawnieniami od razu.
   na ciemno, wlacznie z ciemnym paskiem tytulowym (DWM, Windows 10 1809+/11) -
   patrz ThemeHelper.cs
 - "Sensory" w menu - osobne okno z lista WSZYSTKICH czujnikow plyty glownej
-  (temperatury/wentylatory/napiecia) + wykres wybranego wiersza na dole,
-  wzorowane na zakladce Sensors w GPU-Z (klik wiersz -> wykres pod spodem
-  pokazuje TEGO czujnika historie). Kazdy typ ma inna skale, wiec wykres uzywa
-  auto-zakresu (SparklineChart.AutoRange), nie sztywnego jak przy CPU/GPU/WAN
+  (temperatury/wentylatory/napiecia), kolumny Wartosc/Min/Max/Sr (z ostatnich
+  180s), checkbox "Ukryj nieaktywne" (filtruje czujniki o wartosci 0, np.
+  niepodpiete zlacza pompy) + wykres wybranego wiersza na dole, wzorowane na
+  zakladce Sensors w GPU-Z (klik wiersz -> wykres pod spodem pokazuje TEGO
+  czujnika historie). Kazdy typ ma inna skale, wiec wykres uzywa auto-zakresu
+  (SparklineChart.AutoRange), nie sztywnego jak przy CPU/GPU/WAN. Layout okna
+  liczony recznie (nie przez Anchor) - patrz komentarz w SensorsForm.cs
 - Prawy klik: Info (branding + wersja + wykryty CPU/GPU/RAM) / Sensory / Ustawienia / Zakoncz
 - Klik lewym na ikonie otwiera male okienko: CPU/GPU/WAN, kolorowa kropka przed kazda wartoscia
+- Czwarta i piata sledzona wartosc: VRM MOS oraz CPU FAN (RPM), obie z toggle w
+  ustawieniach i wlasnym wykresem w okienku podgladu (kolejnosc: CPU/GPU/VRM/
+  CPU FAN/WAN). Priorytet ikony trayu (bez zmian): CPU > GPU > VRM > WAN
+- Kazde okno (Podglad/Info/Sensory/Ustawienia) moze byc otwarte tylko RAZ naraz -
+  kolejne klikniecie aktywuje juz otwarte zamiast tworzyc nowe. Wczesniejszy
+  blad: ShowDialog() blokuje watek WLASNA zagniezdzona petla komunikatow, ktora
+  DALEJ obsluguje klikniecia w tray - kazdy klik w trakcie otwierania otwieral
+  kolejne okno wewnatrz poprzedniego, w nieskonczonosc. Naprawione przejsciem
+  na niemodalne Show() + pojedyncza referencja per typ okna
+  (TrayApplicationContext.ShowOrActivate)
+- Podwojny kontur w ikonie (biala "aureola" + czarny pierscien, nie pojedynczy
+  czarny jak wczesniej) - na przezroczystym pasku zadan tlo pod ikona bywa raz
+  jasne, raz ciemne zaleznie co jest na pulpicie, wiec sam czarny kontur ginal
+  na ciemnym tle tak samo jak wypelnienie. Biale+czarne razem gwarantuja
+  kontrast wzgledem obu skrajnosci jednoczesnie
 - Tooltip na wykresach w tym okienku - najedz mysza, pokaze wartosc i ile sekund
   temu (np. "72.3C - -42s")
 - Opcja "zawsze na wierzchu" dla okienka z wykresami (ustawienia -> Ogolne)
