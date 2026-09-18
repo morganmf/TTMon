@@ -60,6 +60,7 @@ public sealed class SettingsForm : Form
         LoadFromSettings();
         _isLoading = false;
 
+        Icon = AppIconLoader.Load() ?? Icon;
         Load += (_, _) => ThemeHelper.Apply(this, _settings.DarkMode);
     }
 
@@ -223,11 +224,9 @@ public sealed class SettingsForm : Form
         {
             Localization.T("tray_font_segoe"), Localization.T("tray_font_bahnschrift"),
             Localization.T("tray_font_dosis"), Localization.T("tray_font_jetbrains"),
-            Localization.T("tray_font_volvo"), Localization.T("tray_font_firacode_mono"),
-            Localization.T("tray_font_firacode_propo"), Localization.T("tray_font_envycoder_mono"),
-            Localization.T("tray_font_envycoder_propo"), Localization.T("tray_font_terminess_mono"),
-            Localization.T("tray_font_terminess_propo"), Localization.T("tray_font_meslo"),
-            Localization.T("tray_font_hurmit_mono"), Localization.T("tray_font_hurmit_propo"),
+            Localization.T("tray_font_firacode_mono"), Localization.T("tray_font_envycoder_mono"),
+            Localization.T("tray_font_terminess_mono"), Localization.T("tray_font_meslo"),
+            Localization.T("tray_font_hurmit_mono"),
         });
         _trayFontBox.Left = 150; _trayFontBox.Top = gy; _trayFontBox.Width = 160;
         group.Controls.Add(trayFontLabel);
@@ -336,16 +335,11 @@ public sealed class SettingsForm : Form
             TrayFontChoice.Bahnschrift => 1,
             TrayFontChoice.Dosis => 2,
             TrayFontChoice.JetBrainsMono => 3,
-            TrayFontChoice.VolvoBroad => 4,
-            TrayFontChoice.FiraCodeMono => 5,
-            TrayFontChoice.FiraCodePropo => 6,
-            TrayFontChoice.EnvyCodeRMono => 7,
-            TrayFontChoice.EnvyCodeRPropo => 8,
-            TrayFontChoice.TerminessMono => 9,
-            TrayFontChoice.TerminessPropo => 10,
-            TrayFontChoice.MesloLGLMono => 11,
-            TrayFontChoice.HurmitMono => 12,
-            TrayFontChoice.HurmitPropo => 13,
+            TrayFontChoice.FiraCodeMono => 4,
+            TrayFontChoice.EnvyCodeRMono => 5,
+            TrayFontChoice.TerminessMono => 6,
+            TrayFontChoice.MesloLGLMono => 7,
+            TrayFontChoice.HurmitMono => 8,
             _ => 0,
         };
         _iconOutlineBox.Checked = _settings.IconOutline;
@@ -403,16 +397,11 @@ public sealed class SettingsForm : Form
             1 => TrayFontChoice.Bahnschrift,
             2 => TrayFontChoice.Dosis,
             3 => TrayFontChoice.JetBrainsMono,
-            4 => TrayFontChoice.VolvoBroad,
-            5 => TrayFontChoice.FiraCodeMono,
-            6 => TrayFontChoice.FiraCodePropo,
-            7 => TrayFontChoice.EnvyCodeRMono,
-            8 => TrayFontChoice.EnvyCodeRPropo,
-            9 => TrayFontChoice.TerminessMono,
-            10 => TrayFontChoice.TerminessPropo,
-            11 => TrayFontChoice.MesloLGLMono,
-            12 => TrayFontChoice.HurmitMono,
-            13 => TrayFontChoice.HurmitPropo,
+            4 => TrayFontChoice.FiraCodeMono,
+            5 => TrayFontChoice.EnvyCodeRMono,
+            6 => TrayFontChoice.TerminessMono,
+            7 => TrayFontChoice.MesloLGLMono,
+            8 => TrayFontChoice.HurmitMono,
             _ => TrayFontChoice.SegoeUI,
         };
         _settings.IconOutline = _iconOutlineBox.Checked;

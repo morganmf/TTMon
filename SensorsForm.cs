@@ -98,6 +98,7 @@ public sealed class SensorsForm : Form
         _refreshTimer.Tick += (_, _) => RefreshList(selectFirstIfNone: false, forceRebuild: false);
         _refreshTimer.Start();
 
+        Icon = AppIconLoader.Load() ?? Icon;
         Load += (_, _) => ThemeHelper.Apply(this, _settings.DarkMode);
     }
 

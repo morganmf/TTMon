@@ -1,5 +1,11 @@
 # TTMon
 
+## Zrzuty ekranu
+
+| Ikona w trayu | Ustawienia | Sensory | Podglad (wykresy) | O programie |
+|---|---|---|---|---|
+| ![Ikona w trayu](docs/screenshots/tray-icon.png) | ![Ustawienia](docs/screenshots/settings.png) | ![Sensory](docs/screenshots/sensors.png) | ![Podglad](docs/screenshots/details.png) | ![O programie](docs/screenshots/about.png) |
+
 ## Budowa
 ```
 dotnet restore

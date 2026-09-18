@@ -206,13 +206,9 @@ public static class TrayIconRenderer
                 // i cicho wracamy do Segoe UI.
                 TrayFontChoice.Dosis => EmbeddedFontLoader.Load("Dosis.ttf") ?? new FontFamily(DefaultFontFamilyName),
                 TrayFontChoice.JetBrainsMono => EmbeddedFontLoader.Load("JetBrainsMono-Bold.ttf") ?? new FontFamily(DefaultFontFamilyName),
-                TrayFontChoice.VolvoBroad => EmbeddedFontLoader.Load("VolvoBroad.ttf") ?? new FontFamily(DefaultFontFamilyName),
                 TrayFontChoice.FiraCodeMono => EmbeddedFontLoader.Load("FiraCodeNerdFontMono-Retina.ttf") ?? new FontFamily(DefaultFontFamilyName),
-                TrayFontChoice.FiraCodePropo => EmbeddedFontLoader.Load("FiraCodeNerdFontPropo-Retina.ttf") ?? new FontFamily(DefaultFontFamilyName),
                 TrayFontChoice.EnvyCodeRMono => EmbeddedFontLoader.Load("EnvyCodeRNerdFontMono-Regular.ttf") ?? new FontFamily(DefaultFontFamilyName),
-                TrayFontChoice.EnvyCodeRPropo => EmbeddedFontLoader.Load("EnvyCodeRNerdFontPropo-Regular.ttf") ?? new FontFamily(DefaultFontFamilyName),
                 TrayFontChoice.TerminessMono => EmbeddedFontLoader.Load("TerminessNerdFontMono-Regular.ttf") ?? new FontFamily(DefaultFontFamilyName),
-                TrayFontChoice.TerminessPropo => EmbeddedFontLoader.Load("TerminessNerdFontPropo-Regular.ttf") ?? new FontFamily(DefaultFontFamilyName),
                 TrayFontChoice.MesloLGLMono => EmbeddedFontLoader.Load("MesloLGLNerdFontMono-Regular.ttf") ?? new FontFamily(DefaultFontFamilyName),
                 // Hurmit to .otf z konturami CFF/PostScript (nie TrueType jak
                 // reszta) - GDI+ (uzywane tu do renderowania) bywa z tym
@@ -220,7 +216,6 @@ public static class TrayIconRenderer
                 // (nie zaladuje sie poprawnie), cicho spadamy do Segoe UI -
                 // ten sam mechanizm bezpieczenstwa co dla brakujacych plikow.
                 TrayFontChoice.HurmitMono => EmbeddedFontLoader.Load("HurmitNerdFontMono-Regular.otf") ?? new FontFamily(DefaultFontFamilyName),
-                TrayFontChoice.HurmitPropo => EmbeddedFontLoader.Load("HurmitNerdFontPropo-Regular.otf") ?? new FontFamily(DefaultFontFamilyName),
                 _ => new FontFamily(DefaultFontFamilyName),
             };
         }

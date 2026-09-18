@@ -43,6 +43,13 @@ SolidCompression=yes
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 WizardStyle=modern
+; Ikona samego pliku Setup.exe (widoczna w Eksploratorze przed instalacja)
+SetupIconFile=..\Resources\app.ico
+; Ikona na liscie "Zainstalowane aplikacje"/"Programy i funkcje" - bez tego
+; Windows pokazuje tam domyslna, ogolna ikone zamiast naszej. Wskazuje na
+; JUZ ZAINSTALOWANY .exe (ktory ma ikone osadzona przez ApplicationIcon w
+; .csproj), nie na sam plik .ico.
+UninstallDisplayIcon={app}\{#MyAppExeName}
 ; Odkomentuj po jednorazowej konfiguracji w Tools -> Configure Sign Tools:
 ;SignTool=mytool
 

@@ -27,8 +27,7 @@ public enum IconSizeLevel { Small, Medium, Large }
 public enum TrayFontChoice
 {
     SegoeUI, Bahnschrift, Dosis, JetBrainsMono,
-    VolvoBroad, FiraCodeMono, FiraCodePropo, EnvyCodeRMono, EnvyCodeRPropo,
-    TerminessMono, TerminessPropo, MesloLGLMono, HurmitMono, HurmitPropo,
+    FiraCodeMono, EnvyCodeRMono, TerminessMono, MesloLGLMono, HurmitMono,
 }
 
 // ColoredText (domyslne, dotychczasowe): kolorowe cyfry na przezroczystym tle -

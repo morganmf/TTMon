@@ -123,6 +123,7 @@ public sealed class DetailsForm : Form
         _refreshTimer.Tick += (_, _) => RefreshValues();
         _refreshTimer.Start();
 
+        Icon = AppIconLoader.Load() ?? Icon;
         Load += (_, _) => ThemeHelper.Apply(this, _settings.DarkMode);
     }
 

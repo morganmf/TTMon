@@ -79,6 +79,7 @@ public sealed class InfoForm : Form
 
         ClientSize = new Size(contentWidth + 30, y + 50);
 
+        Icon = AppIconLoader.Load() ?? Icon;
         Load += (_, _) => ThemeHelper.Apply(this, settings.DarkMode);
     }
 

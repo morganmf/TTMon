@@ -40,12 +40,16 @@ public sealed class SparklineChart : Panel
 
         _lastPoints.Clear();
 
-        var data = DataProvider?.Invoke();
-        if (data == null || data.Count < 2 || Width <= 0 || Height <= 0)
-            return;
+        if (Width <= 0 || Height <= 0) return;
 
         var g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        DrawGrid(g);
+
+        var data = DataProvider?.Invoke();
+        if (data == null || data.Count < 2)
+            return;
 
         var now = DateTime.UtcNow;
         var windowSeconds = HistoryBuffer.Window.TotalSeconds;
@@ -103,6 +107,30 @@ public sealed class SparklineChart : Panel
 
             prevPoint = point;
             prevValue = value.Value;
+        }
+    }
+
+    // Subtelna siatka w tle - 3 poziome linie (dziela wysokosc na czwiartki)
+    // + pionowe co 30 sekund w oknie 180s. Rysowana ZAWSZE (nawet bez danych),
+    // bo to tlo/uklad odniesienia, nie zalezy od tego czy juz jest co pokazac.
+    private void DrawGrid(Graphics g)
+    {
+        using var gridPen = new Pen(Color.FromArgb(45, 128, 128, 128), 1f);
+
+        const int horizontalLines = 3;
+        for (int i = 1; i <= horizontalLines; i++)
+        {
+            var y = Height * i / (float)(horizontalLines + 1);
+            g.DrawLine(gridPen, 0, y, Width, y);
+        }
+
+        const double intervalSeconds = 30;
+        var windowSeconds = HistoryBuffer.Window.TotalSeconds;
+        for (double t = intervalSeconds; t < windowSeconds; t += intervalSeconds)
+        {
+            var xFraction = 1f - (float)(t / windowSeconds);
+            var x = xFraction * Width;
+            g.DrawLine(gridPen, x, 0, x, Height);
         }
     }
 

@@ -42,16 +42,11 @@
          (bez bledu builda) - patrz EmbeddedFontLoader.cs -->
     <EmbeddedResource Include="Resources\Dosis.ttf" Condition="Exists('Resources\Dosis.ttf')" />
     <EmbeddedResource Include="Resources\JetBrainsMono-Bold.ttf" Condition="Exists('Resources\JetBrainsMono-Bold.ttf')" />
-    <EmbeddedResource Include="Resources\VolvoBroad.ttf" Condition="Exists('Resources\VolvoBroad.ttf')" />
     <EmbeddedResource Include="Resources\FiraCodeNerdFontMono-Retina.ttf" Condition="Exists('Resources\FiraCodeNerdFontMono-Retina.ttf')" />
-    <EmbeddedResource Include="Resources\FiraCodeNerdFontPropo-Retina.ttf" Condition="Exists('Resources\FiraCodeNerdFontPropo-Retina.ttf')" />
     <EmbeddedResource Include="Resources\EnvyCodeRNerdFontMono-Regular.ttf" Condition="Exists('Resources\EnvyCodeRNerdFontMono-Regular.ttf')" />
-    <EmbeddedResource Include="Resources\EnvyCodeRNerdFontPropo-Regular.ttf" Condition="Exists('Resources\EnvyCodeRNerdFontPropo-Regular.ttf')" />
     <EmbeddedResource Include="Resources\TerminessNerdFontMono-Regular.ttf" Condition="Exists('Resources\TerminessNerdFontMono-Regular.ttf')" />
-    <EmbeddedResource Include="Resources\TerminessNerdFontPropo-Regular.ttf" Condition="Exists('Resources\TerminessNerdFontPropo-Regular.ttf')" />
     <EmbeddedResource Include="Resources\MesloLGLNerdFontMono-Regular.ttf" Condition="Exists('Resources\MesloLGLNerdFontMono-Regular.ttf')" />
     <EmbeddedResource Include="Resources\HurmitNerdFontMono-Regular.otf" Condition="Exists('Resources\HurmitNerdFontMono-Regular.otf')" />
-    <EmbeddedResource Include="Resources\HurmitNerdFontPropo-Regular.otf" Condition="Exists('Resources\HurmitNerdFontPropo-Regular.otf')" />
   </ItemGroup>
 
 </Project>
